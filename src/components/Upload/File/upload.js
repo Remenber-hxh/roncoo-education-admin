@@ -13,7 +13,7 @@ import bus from '@/utils/bus'
 export const handleVod = async (startFile) => {
   const res = await getVodConfig()
   if (res.vodPlatform == 1) {
-    // 领课云上传
+    // 私有云上传
     const simpleClient = getSimpleClient(JSON.parse(res.vodUploadConfig))
     uploadSimple(simpleClient, startFile, (type, data) => {
       if (type === 'FileProgress') {

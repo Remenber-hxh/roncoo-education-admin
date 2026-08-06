@@ -4,9 +4,9 @@
       <div class="menu-main">
         <el-menu v-for="item in menuList" :key="item.id" :default-active="showMenuId" mode="vertical">
           <div class="menu-main-item" :class="[hoverMenuId === item.id ? 'hover' : '']" @mouseenter="showSubMenu(item.children, item)">
-            <router-link :to="item.path" @click="handleMenu(item)">
+            <component :is="item.path ? 'router-link' : 'div'" v-bind="item.path ? { to: item.path } : {}" @click="handleMenu(item)">
               <el-menu-item :key="item.id" :class="[item.id === showMenuId ? 'is-active' : '']" :index="item.path"> <icon :name="item.menuIcon" class="menu-icon" />{{ item.menuName }} </el-menu-item>
-            </router-link>
+            </component>
           </div>
         </el-menu>
       </div>
@@ -14,9 +14,9 @@
       <div v-if="subMenuList" class="menu-sub">
         <el-menu v-for="sub in subMenuList" :key="sub.id" :default-active="showSubMenuId" mode="vertical">
           <div class="menu-sub-item">
-            <router-link :to="sub.path" @click="showChildrenMenu(subMenuList)">
+            <component :is="sub.path ? 'router-link' : 'div'" v-bind="sub.path ? { to: sub.path } : {}" @click="showChildrenMenu(subMenuList)">
               <el-menu-item :key="sub.id" :class="[sub.id === showSubMenuId ? 'is-active' : '']" :index="sub.path"> {{ sub.menuName }} </el-menu-item>
-            </router-link>
+            </component>
           </div>
         </el-menu>
       </div>
