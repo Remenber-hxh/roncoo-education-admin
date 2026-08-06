@@ -49,6 +49,7 @@
   import { courseApi } from '@/api/course.js'
   import { formatTimeTotal } from '@/utils/base.js'
   import EnumView from '@/components/Enum/View/index.vue'
+  import { ElMessage } from 'element-plus'
   const route = useRoute()
   const activeName = ref(route.query.activeName)
   // 切换
@@ -60,6 +61,12 @@
   const orderInfoStat = ref({})
   const userCourseStat = ref({})
   onMounted(() => {
+    // 本页是详情页，必须带 userId（由用户列表的「查看记录」按钮跳转过来）。
+    // 缺参数时不发请求，否则会把字符串 "undefined" 传给后端导致报错。
+    if (!route.query.userId) {
+      ElMessage.warning('请从「用户列表」中选择用户后查看记录')
+      return
+    }
     // 获取用户信息
     usersApi.usersView({ id: route.query.userId }).then((res) => {
       usersInfo.value = res

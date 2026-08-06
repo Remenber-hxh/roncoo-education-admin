@@ -36,11 +36,18 @@
   import { onMounted, ref } from 'vue'
   import { courseApi } from '@/api/course.js'
   import { useRoute } from 'vue-router'
+  import { ElMessage } from 'element-plus'
   const route = useRoute()
 
   const activeName = ref('course')
 
   onMounted(() => {
+    // 本页是详情页，必须带 courseId（由课程列表的「数据」按钮跳转过来）。
+    // 缺参数时不发请求，否则会把字符串 "undefined" 传给后端导致报错。
+    if (!route.query.courseId) {
+      ElMessage.warning('请从「课程列表」中选择课程后查看数据')
+      return
+    }
     // 课程信息
     handleCourseInfo()
   })
