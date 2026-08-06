@@ -50,9 +50,55 @@ export const handleVod = async (startFile) => {
         ElMessage.error('上传失败，请重试')
       }
     })
+  } else if (res.vodPlatform == 5) {
+    // 本地存储（二开新增）：没有第三方点播云可直传，改为经服务端上传落盘
+    startFile.status = 'uploading'
+    try {
+      await handleVideoDuration(startFile)
+      startFile.resourceUrl = await uploadApi.video(
+        startFile.file,
+        (p) => {
+          startFile.progress = p
+          startFile.status = 'uploading'
+        },
+        startFile.cancelToken
+      )
+      startFile.vodPlatform = 5
+      await handleResource(startFile)
+      startFile.status = 'success'
+      useUploadStore().addSuccessFile(startFile)
+    } catch (e) {
+      console.error(e)
+      startFile.status = 'fail'
+    }
   } else {
     ElMessage.error('暂不支持该上传平台：' + res.vodPlatform)
   }
+}
+
+/**
+ * 读取音视频时长（秒），本地存储没有第三方云回传时长，只能在浏览器侧取
+ */
+const handleVideoDuration = (startFile) => {
+  return new Promise((resolve) => {
+    try {
+      const el = document.createElement('video')
+      el.preload = 'metadata'
+      const url = URL.createObjectURL(startFile.file)
+      el.onloadedmetadata = () => {
+        startFile.videoLength = Math.round(el.duration) || 0
+        URL.revokeObjectURL(url)
+        resolve(startFile)
+      }
+      el.onerror = () => {
+        URL.revokeObjectURL(url)
+        resolve(startFile)
+      }
+      el.src = url
+    } catch (e) {
+      resolve(startFile)
+    }
+  })
 }
 
 /**
@@ -114,6 +160,7 @@ const handleResource = async (data) => {
     vodPlatform: data.vodPlatform,
     storagePlatform: data.storagePlatform,
     videoVid: data.videoVid,
+    videoLength: data.videoLength,
     docPage: data.docPage,
     imgWidth: data.imgWidth,
     imgHeight: data.imgHeight
