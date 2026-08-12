@@ -6,8 +6,6 @@
         <div class="info">
           <div class="info-title">{{ currentCourseInfo.courseName }}</div>
           <div class="info-name">讲师：{{ currentCourseInfo.lecturerName }}</div>
-          <div class="info-name">销售价：￥{{ currentCourseInfo.coursePrice }}</div>
-          <div class="info-name">上架状态：售卖</div>
         </div>
       </div>
       <div class="header-button">
@@ -53,7 +51,6 @@
                     <span v-if="scope.row.liveViewResp.liveStatus === 1">&nbsp;&nbsp;|&nbsp;开播时间：{{ scope.row.liveViewResp.beginTime }}</span>
                   </div>
                 </span>
-                <span v-if="currentCourseInfo.isFree === 0 && scope.row.isFree === 1" class="is-free">试看</span>
               </div>
             </template>
           </el-table-column>
@@ -163,7 +160,6 @@
   // 课时修改
   const periodFormRef = ref()
   const openFormPeriodModal = (item) => {
-    item.coursePrice = currentCourseInfo.value.coursePrice
     periodFormRef.value.onOpen(item)
   }
 

@@ -1,15 +1,6 @@
 import { deleteRequest, getRequest, postRequest, putRequest } from '@/utils/request'
 
 export const usersApi = {
-  // 用户账号金额消费
-  usersAccountConsumeSave: (data) => {
-    return postRequest('/user/admin/users/account/consume/save', data)
-  },
-  // 用户账号金额消费记录
-  usersAccountConsumePage: (data) => {
-    return postRequest('/user/admin/users/account/consume/page', data)
-  },
-
   // 讲师分页
   lecturerPage: (params, pageCurrent = 1, pageSize = 20) => {
     return postRequest('/user/admin/lecturer/page', { pageCurrent, pageSize, ...params })
@@ -63,16 +54,5 @@ export const usersApi = {
   // 用户课程分页
   userCoursePage: (params, pageCurrent = 1, pageSize = 20) => {
     return postRequest('/course/admin/user/course/page', { pageCurrent, pageSize, ...params })
-  },
-
-  // 订单
-  orderInfoPage: (params, pageCurrent = 1, pageSize = 20) => {
-    return postRequest('/user/admin/order/info/page', { pageCurrent, pageSize, ...params })
-  },
-  orderEdit: (data) => {
-    return putRequest('/user/admin/order/info/edit', data)
-  },
-  orderInfoStat: (data) => {
-    return getRequest('/user/admin/order/info/stat?userId=' + data.userId)
   }
 }

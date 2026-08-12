@@ -4,9 +4,6 @@
       <el-form-item class="form-group" label="课时名称" prop="periodName">
         <el-input v-model="formModel.periodName" maxlength="100" show-word-limit />
       </el-form-item>
-      <el-form-item v-if="coursePrice > 0" class="form-group" label="收费设置" prop="isFree">
-        <enum-radio v-model="formModel.isFree" :enum-name="'FreeEnum'" />
-      </el-form-item>
     </el-form>
     <template #footer>
       <span class="dialog-footer">
@@ -30,14 +27,12 @@
   }
 
   // 表单
-  const coursePrice = ref(0)
   const loading = ref(false) // 加载进度状态
   const emit = defineEmits(['refresh'])
   const formDefault = {
     id: undefined,
     periodName: undefined,
-    periodType: 10,
-    isFree: 0
+    periodType: 10
   }
   const formModel = reactive({ ...formDefault })
   const onSubmit = async () => {
@@ -68,11 +63,9 @@
   // 打开和关闭
   const visible = ref(false) // 弹窗显示状态
   const onOpen = (item) => {
-    coursePrice.value = item.coursePrice
     if (item) {
       formModel.id = item.id
       formModel.periodName = item.periodName
-      formModel.isFree = item.isFree
     }
     visible.value = true
   }

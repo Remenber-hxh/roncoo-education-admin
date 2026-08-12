@@ -33,13 +33,7 @@
             <enum-radio v-model="formModel.speedDrag" :enum-name="'SpeedDragEnum'" />
             <span class="tooltip">开启后，用户可在播放页面快速拖拽播放，关闭则无法进行拖拽播放。</span>
           </el-form-item>
-          <el-form-item label="销售价" prop="coursePrice">
-            <el-input-number v-model="formModel.coursePrice" :min="0" :precision="2" show-word-limit></el-input-number>
-          </el-form-item>
-          <el-form-item label="划线价" prop="rulingPrice">
-            <el-input-number v-model="formModel.rulingPrice" :min="0" :precision="2" show-word-limit></el-input-number>
-          </el-form-item>
-          <el-form-item label="售卖" prop="isPutaway">
+          <el-form-item label="上架" prop="isPutaway">
             <enum-radio v-model="formModel.isPutaway" :enum-name="'PutawayEnum'" />
           </el-form-item>
         </div>
@@ -101,8 +95,6 @@
     lecturerId: undefined,
     courseLogo: undefined,
     introduce: undefined,
-    coursePrice: 0,
-    rulingPrice: 0,
     isPutaway: 1,
     speedDouble: 1,
     speedDrag: 1

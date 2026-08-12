@@ -21,14 +21,6 @@
           &nbsp;{{ scope.row.nickname }}
         </template>
       </el-table-column>
-      <el-table-column :min-width="60" label="账户">
-        <template #default="scope">
-          <span>余额：￥{{ scope.row.usersAccountViewResp?.availableAmount }}元</span>
-          <br />
-          <span>冻结：￥{{ scope.row.usersAccountViewResp?.freezeAmount }}元</span>&nbsp;
-          <el-button v-permission="'user:record'" link @click="toUserRecord(scope.row, 'account')">查看明细</el-button>
-        </template>
-      </el-table-column>
       <el-table-column :min-width="40" label="注册来源" prop="remark">
         <template #default="scope">
           <enum-view :enum-name="'RegisterSourceEnum'" :enum-value="scope.row.registerSource" />

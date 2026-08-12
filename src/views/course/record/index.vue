@@ -6,16 +6,11 @@
         <div class="info">
           <div class="info-title">{{ currentCourseInfo.courseName }}</div>
           <div class="info-name">讲师：{{ currentCourseInfo.lecturerName }}</div>
-          <div class="info-name">销售价：￥{{ currentCourseInfo.coursePrice }}</div>
-          <div class="info-name">上架状态：售卖</div>
         </div>
       </div>
     </div>
     <div style="height: 20px"></div>
     <el-tabs v-model="activeName" @tab-click="handleClick">
-      <el-tab-pane v-if="currentCourseInfo.coursePrice > 0" label="售卖记录" name="order">
-        <record-order v-if="activeName === 'order'" />
-      </el-tab-pane>
       <el-tab-pane label="学习记录" name="course">
         <record-course v-if="activeName === 'course'" />
       </el-tab-pane>
@@ -29,7 +24,6 @@
   </div>
 </template>
 <script setup>
-  import RecordOrder from './Order.vue'
   import RecordComment from './Comment.vue'
   import RecordCollect from './Collect.vue'
   import RecordCourse from './Course.vue'
@@ -56,9 +50,6 @@
   const currentCourseInfo = ref({})
   const handleCourseInfo = async () => {
     currentCourseInfo.value = await courseApi.courseView({ id: route.query.courseId })
-    if (currentCourseInfo.value.coursePrice > 0) {
-      activeName.value = 'order'
-    }
   }
 
   // 切换

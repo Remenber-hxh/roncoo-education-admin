@@ -22,15 +22,10 @@
           <img :alt="scope.row.courseViewResp.courseName" :src="scope.row.courseViewResp.courseLogo" style="float: left; height: 50px; width: 90px; vertical-align: middle; border-radius: 5px" />
           <div style="float: left; margin-left: 10px">
             {{ scope.row.courseViewResp.courseName }}
-            <br />
-            <span v-if="scope.row.courseViewResp.isFree == 1">免费</span>
-            <span v-if="scope.row.courseViewResp.isFree == 0">
-              ￥{{ scope.row.courseViewResp.coursePrice }}<span style="text-decoration: line-through; margin-left: 10px">￥{{ scope.row.courseViewResp.rulingPrice }}</span>
-            </span>
           </div>
         </template>
       </el-table-column>
-      <el-table-column :min-width="30" label="售卖">
+      <el-table-column :min-width="30" label="上架">
         <template #default="scope">
           <span :class="{ 'c-special': scope.row.courseViewResp.isPutaway === 0 }">
             <enum-view :enum-name="'PutawayEnum'" :enum-value="scope.row.courseViewResp.isPutaway" />

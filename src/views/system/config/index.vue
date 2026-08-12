@@ -50,10 +50,6 @@
       configType: '5'
     },
     {
-      label: '支付设置',
-      configType: '6'
-    },
-    {
       label: 'AI大模型设置',
       configType: '11'
     }
