@@ -120,6 +120,11 @@ export const courseApi = {
     return putRequest('/course/admin/course/chapter/period/edit', data)
   },
 
+  // 课时详情（图文课时编辑时用，列表接口不返回正文）
+  courseChapterPeriodView: (data) => {
+    return getRequest('/course/admin/course/chapter/period/view?id=' + data.id)
+  },
+
   // 课程章节保存
   courseChapterPeriodSave: (data) => {
     return postRequest('/course/admin/course/chapter/period/save', data)

@@ -27,7 +27,14 @@
             <template #default="scope">
               <div class="table-default">
                 <span>{{ scope.$index + 1 }}. </span>
-                <span v-if="scope.row.resourceViewResp">
+                <!-- 图文课时没有关联资源，正文存在课时自身上，单独渲染 -->
+                <span v-if="scope.row.periodType === 30">
+                  <el-tag class="table-default-tag" effect="plain" type="success">图文</el-tag>
+                  <span>{{ scope.row.periodName }}</span>
+                  <el-tag v-if="scope.row.needSign === 1" class="table-default-tag" effect="plain" type="warning" style="margin-left: 8px">需签署</el-tag>
+                  <span v-if="scope.row.readSeconds > 0" style="color: #999; margin-left: 8px">最短阅读 {{ scope.row.readSeconds }} 秒</span>
+                </span>
+                <span v-else-if="scope.row.resourceViewResp">
                   <el-tag class="table-default-tag" effect="plain"><enum-view :enum-name="'ResourceTypeEnum'" :enum-value="scope.row.resourceViewResp.resourceType" /> </el-tag>
                   <span>
                     <span>{{ scope.row.periodName }}</span>
@@ -58,10 +65,12 @@
             <template #header>
               <div>
                 <el-button @click="resourceSelect">添加资源</el-button>
+                <el-button type="primary" @click="openArticleModal()">添加图文</el-button>
               </div>
             </template>
             <template #default="scope">
-              <el-button v-if="scope.row.periodType === 10" text type="primary" @click="openFormPeriodModal(scope.row)">编辑</el-button>
+              <el-button v-if="scope.row.periodType === 30" text type="primary" @click="openArticleModal(scope.row)">编辑图文</el-button>
+              <el-button v-else-if="scope.row.periodType === 10" text type="primary" @click="openFormPeriodModal(scope.row)">编辑</el-button>
               <el-divider direction="vertical" />
               <el-button text type="primary" @click="handleDelete(scope.row)">删除</el-button>
             </template>
@@ -72,11 +81,13 @@
   </div>
   <select-resource v-if="period.visible" :visible="period.visible" @close="handleResource" />
   <period-form ref="periodFormRef" @refresh="handleChapterList" />
+  <article-form ref="articleFormRef" @refresh="handleArticleRefresh" />
 </template>
 <script setup>
   import { onMounted, ref } from 'vue'
   import { courseApi } from '@/api/course'
   import PeriodForm from './PeriodForm.vue'
+  import ArticleForm from './ArticleForm.vue'
   import { useRoute } from 'vue-router/dist/vue-router'
   import EnumView from '@/components/Enum/View/index.vue'
   import Chapter from './Chapter.vue'
@@ -161,6 +172,19 @@
   const periodFormRef = ref()
   const openFormPeriodModal = (item) => {
     periodFormRef.value.onOpen(item)
+  }
+
+  // 图文课时（二开新增）：不传 item 为新增，传了为编辑
+  const articleFormRef = ref()
+  const openArticleModal = (item) => {
+    if (!item && !currentChapterInfo.value?.id) {
+      ElMessage.warning('请先选择左侧的章节')
+      return
+    }
+    articleFormRef.value.onOpen(item, currentChapterInfo.value.id)
+  }
+  const handleArticleRefresh = () => {
+    handlePeriodList(currentChapterInfo.value.id)
   }
 
   // 课时删除
