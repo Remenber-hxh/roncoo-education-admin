@@ -12,6 +12,13 @@
         <el-select v-model="formModel.teamId" placeholder="请选择班组" clearable style="width: 100%">
           <el-option v-for="t in teamList" :key="t.id" :label="t.teamName" :value="t.id" />
         </el-select>
+        <span class="form-tip">班组回答「干什么活」，如强电组、维修组</span>
+      </el-form-item>
+      <el-form-item label="项目组" prop="projectGroupId">
+        <el-select v-model="formModel.projectGroupId" placeholder="请选择项目组" clearable style="width: 100%">
+          <el-option v-for="g in groupList" :key="g.id" :label="g.groupName" :value="g.id" />
+        </el-select>
+        <span class="form-tip">项目组回答「在哪个点上班」，与班组互不影响</span>
       </el-form-item>
       <el-form-item label="岗位职务" prop="position">
         <el-input v-model="formModel.position" maxlength="64" placeholder="如：强电技工" />
@@ -43,12 +50,14 @@
   const emit = defineEmits(['refresh'])
   const loading = ref(false)
   const teamList = ref([])
+  const groupList = ref([])
   const formDefault = {
     id: undefined,
     nickname: '',
     mobile: '',
     empNo: undefined,
     teamId: undefined,
+    projectGroupId: undefined,
     position: undefined,
     hireDate: undefined
   }
@@ -67,6 +76,7 @@
         id: formModel.id,
         empNo: formModel.empNo,
         teamId: formModel.teamId,
+        projectGroupId: formModel.projectGroupId,
         position: formModel.position,
         hireDate: formModel.hireDate
       })
@@ -80,9 +90,12 @@
 
   const visible = ref(false)
   const onOpen = (item) => {
-    // 班组下拉每次打开都取一次，避免管理员刚加完班组还看不到
+    // 两个下拉每次打开都取一次，避免管理员刚加完新组还看不到
     usersApi.teamList().then((res) => {
       teamList.value = res || []
+    })
+    usersApi.projectGroupList().then((res) => {
+      groupList.value = res || []
     })
     if (item) Object.assign(formModel, formDefault, item)
     visible.value = true

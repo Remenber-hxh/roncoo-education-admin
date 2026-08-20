@@ -89,5 +89,35 @@ export const usersApi = {
   // 班组删除
   teamDelete: (data) => {
     return deleteRequest('/user/admin/team/delete?id=' + data.id)
+  },
+
+  // 项目组分页
+  projectGroupPage: (params, pageCurrent = 1, pageSize = 20) => {
+    return postRequest('/user/admin/project/group/page', { pageCurrent, pageSize, ...params })
+  },
+
+  // 项目组下拉列表（只含启用中的）
+  projectGroupList: () => {
+    return getRequest('/user/admin/project/group/list')
+  },
+
+  // 项目组查看
+  projectGroupView: (data) => {
+    return getRequest('/user/admin/project/group/view?id=' + data.id)
+  },
+
+  // 项目组添加
+  projectGroupSave: (data) => {
+    return postRequest('/user/admin/project/group/save', data)
+  },
+
+  // 项目组修改
+  projectGroupEdit: (data) => {
+    return putRequest('/user/admin/project/group/edit', data)
+  },
+
+  // 项目组删除
+  projectGroupDelete: (data) => {
+    return deleteRequest('/user/admin/project/group/delete?id=' + data.id)
   }
 }

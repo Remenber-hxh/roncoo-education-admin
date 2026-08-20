@@ -15,6 +15,11 @@
             </el-select>
           </el-form-item>
           <el-form-item>
+            <el-select v-model="query.projectGroupId" placeholder="项目组" clearable style="width: 180px">
+              <el-option v-for="g in groupList" :key="g.id" :label="g.groupName" :value="g.id" />
+            </el-select>
+          </el-form-item>
+          <el-form-item>
             <el-button type="primary" @click="handleQuery()"> 查询</el-button>
             <el-button @click="resetQuery()">重置</el-button>
           </el-form-item>
@@ -38,6 +43,12 @@
       <el-table-column label="班组" :min-width="35">
         <template #default="scope">
           <span v-if="scope.row.teamName">{{ scope.row.teamName }}</span>
+          <el-tag v-else size="small" type="warning">未分组</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="项目组" :min-width="45">
+        <template #default="scope">
+          <span v-if="scope.row.projectGroupName">{{ scope.row.projectGroupName }}</span>
           <el-tag v-else size="small" type="warning">未分组</el-tag>
         </template>
       </el-table-column>
@@ -109,11 +120,15 @@
     profileRef.value.onOpen(item)
   }
 
-  // 筛选用的班组下拉
+  // 筛选用的两个下拉
   const teamList = ref([])
+  const groupList = ref([])
   onMounted(() => {
     usersApi.teamList().then((res) => {
       teamList.value = res || []
+    })
+    usersApi.projectGroupList().then((res) => {
+      groupList.value = res || []
     })
   })
 
