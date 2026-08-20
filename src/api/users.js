@@ -56,6 +56,11 @@ export const usersApi = {
     return postRequest('/course/admin/user/course/page', { pageCurrent, pageSize, ...params })
   },
 
+  // 员工档案编辑（工号/班组/岗位/入职日期）
+  usersProfileEdit: (data) => {
+    return putRequest('/user/admin/users/profile/edit', data)
+  },
+
   // 班组分页
   teamPage: (params, pageCurrent = 1, pageSize = 20) => {
     return postRequest('/user/admin/team/page', { pageCurrent, pageSize, ...params })
