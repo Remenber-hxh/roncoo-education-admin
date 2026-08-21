@@ -1,212 +1,106 @@
 <template>
-  <el-aside :class="{ 'show-sub': subMenuList }" @mouseleave="restoreSubMenu">
-    <div class="menu-side">
-      <div class="menu-main">
-        <el-menu v-for="item in menuList" :key="item.id" :default-active="showMenuId" mode="vertical">
-          <div class="menu-main-item" :class="[hoverMenuId === item.id ? 'hover' : '']" @mouseenter="showSubMenu(item.children, item)">
-            <component :is="item.path ? 'router-link' : 'div'" v-bind="item.path ? { to: item.path } : {}" @click="handleMenu(item)">
-              <el-menu-item :key="item.id" :class="[item.id === showMenuId ? 'is-active' : '']" :index="item.path"> <icon :name="item.menuIcon" class="menu-icon" />{{ item.menuName }} </el-menu-item>
-            </component>
-          </div>
-        </el-menu>
-      </div>
-      <!-- 子菜单 -->
-      <div v-if="subMenuList" class="menu-sub">
-        <el-menu v-for="sub in subMenuList" :key="sub.id" :default-active="showSubMenuId" mode="vertical">
-          <div class="menu-sub-item">
-            <component :is="sub.path ? 'router-link' : 'div'" v-bind="sub.path ? { to: sub.path } : {}" @click="showChildrenMenu(subMenuList)">
-              <el-menu-item :key="sub.id" :class="[sub.id === showSubMenuId ? 'is-active' : '']" :index="sub.path"> {{ sub.menuName }} </el-menu-item>
-            </component>
-          </div>
-        </el-menu>
-      </div>
+  <el-aside class="app-sidebar" :width="collapsed ? 'var(--t-sidebar-width-collapsed)' : 'var(--t-sidebar-width)'">
+    <div class="sidebar-brand">
+      <!-- svg 图标库里没有 logo，用 Element Plus 的图标当标记 -->
+      <el-icon class="brand-icon" :size="22"><reading /></el-icon>
+      <span v-show="!collapsed" class="brand-text">内部培训平台</span>
     </div>
+    <el-scrollbar class="sidebar-scroll">
+      <el-menu
+        :default-active="activePath"
+        :collapse="collapsed"
+        :collapse-transition="false"
+        unique-opened
+        router
+        background-color="var(--t-sidebar-bg)"
+        text-color="var(--t-sidebar-text)"
+        active-text-color="var(--t-sidebar-text-active)"
+      >
+        <sidebar-item v-for="item in menuList" :key="item.id" :item="item" />
+      </el-menu>
+    </el-scrollbar>
   </el-aside>
 </template>
+
 <script setup>
-  import { computed, onMounted, ref, watchEffect } from 'vue'
+  import { computed } from 'vue'
+  import { useRoute } from 'vue-router'
   import { useUserStore } from '@/store/modules/user'
-  import { useRoute } from 'vue-router/dist/vue-router'
-  import router from '@/router'
+  import { useAppStore } from '@/store/modules/app'
+  import SidebarItem from './SidebarItem.vue'
+  import { Reading } from '@element-plus/icons-vue'
 
-  // 加载用户菜单
+  // 菜单仍然来自 sys_menu（接口下发），这里只换渲染方式：
+  // 原来是鼠标悬停展开第二列，改成标准的可折叠嵌套菜单。
   const menuList = computed(() => useUserStore().getMenuList)
+  const collapsed = computed(() => useAppStore().sidebarCollapsed)
 
-  // 当前路由
   const route = useRoute()
-
-  // 菜单集合
-  const showMenuList = ref([])
-  const showMenuId = ref()
-  const showSubMenuId = ref()
-
-  // 子菜单集合
-  const subMenuList = ref([])
-  // 选择的菜单ID
-  const hoverMenuId = ref()
-
-  watchEffect(() => {
-    showSubMenuId.value = route.name
-    const mapList = useUserStore().getBreadcrumbMap.get(showSubMenuId.value)
-    if (mapList && mapList.length > 0) {
-      showMenuId.value = mapList[0].id
-      if (mapList.length > 2) {
-        showSubMenuId.value = mapList[1].id
-      }
-    } else {
-      showMenuId.value = route.name
-    }
-  })
-
-  onMounted(() => {
-    const menu = menuList.value.filter((e) => e.id === showMenuId.value)
-    if (menu && menu.length > 0) {
-      subMenuList.value = menu[0].children
-    }
-    showMenuList.value = subMenuList.value
-  })
-
-  // 鼠标移入
-  function showSubMenu(menuList, menu) {
-    subMenuList.value = menuList
-    hoverMenuId.value = menu.id
-  }
-
-  // 鼠标移出
-  function restoreSubMenu() {
-    subMenuList.value = showMenuList.value
-    hoverMenuId.value = ''
-  }
-
-  // 点击子菜单
-  function showChildrenMenu(menuList) {
-    // 记录当前菜单列表和菜单
-    showMenuList.value = menuList
-    hoverMenuId.value = showMenuId.value
-  }
-
-  // 点击主菜单
-  function handleMenu(menu) {
-    if (menu.children) {
-      router.push({ path: menu.children[0].path })
-    }
-    showMenuList.value = menu.children
-    showMenuId.value = menu.id
-    hoverMenuId.value = showMenuId.value
-  }
+  // 用路径而不是路由名做高亮：详情页这类没挂菜单的路由，
+  // 靠 activeMenu 元信息回指到父菜单
+  const activePath = computed(() => route.meta?.activeMenu || route.path)
 </script>
 
 <style lang="scss" scoped>
-  .el-aside {
+  .app-sidebar {
+    background: var(--t-sidebar-bg);
+    height: 100vh;
     overflow: hidden;
-    width: 100px;
-
-    &.show-sub {
-      width: 200px;
-    }
-
-    transition: all 0.5s;
+    transition: width 0.25s;
+    display: flex;
+    flex-direction: column;
   }
 
-  .menu-side {
-    position: fixed;
-    top: 60px;
-  }
+  .sidebar-brand {
+    height: var(--t-header-h);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 16px;
+    color: #fff;
+    flex-shrink: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 
-  .menu-main {
-    .menu-icon {
-      margin-right: 6px;
-      width: 20px;
-      height: 20px;
-    }
-    .el-menu {
-      background-color: #15213e;
-      border: 0;
-    }
-
-    width: 90px;
-    float: left;
-    height: calc(100vh - 50px);
-    background-color: #15213e;
-    padding-left: 10px;
-
-    .menu-main-item {
-      .el-menu-item {
-        width: 90px;
-        height: 50px;
-        margin: 10px 0;
-        color: white;
-        border-radius: 10px 0 0 10px;
-
-        &:hover {
-          background-color: #3b455d;
-          color: #fff;
-        }
-
-        &.is-active {
-          background-color: #fff;
-          color: black;
-        }
-      }
-
-      .is-active {
-        background-color: #fff;
-        color: black;
-      }
+    .brand-icon {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
     }
 
-    .hover {
-      background-color: #3b455d;
-      color: #fff;
-      border-radius: 10px 0 0 10px;
+    .brand-text {
+      font-size: 15px;
+      font-weight: 600;
+      white-space: nowrap;
     }
   }
 
-  .menu-sub {
-    width: 0;
-    opacity: 0;
-    float: left;
-    padding-top: 10px;
-    background-color: #fff;
-    height: calc(100vh - 50px);
-    transition: all 0.5s;
+  .sidebar-scroll {
+    flex: 1;
+    min-height: 0;
+  }
 
-    .el-menu {
-      border: none;
-    }
+  :deep(.el-menu) {
+    border-right: none;
+  }
 
-    .menu-sub-item {
-      .el-menu-item {
-        height: 40px;
-        box-sizing: border-box;
-        margin: 5px auto;
-        justify-content: center;
-        width: 80px;
+  :deep(.el-menu-item),
+  :deep(.el-sub-menu__title) {
+    height: 44px;
+    line-height: 44px;
 
-        &:hover {
-          background-color: #f0f1ff;
-          border-radius: 5px;
-          width: 80px;
-        }
-      }
-
-      .is-active {
-        background-color: #f0f1ff;
-        border-radius: 5px;
-        width: 80px;
-      }
+    &:hover {
+      background-color: var(--t-sidebar-hover) !important;
+      color: var(--t-sidebar-text-active) !important;
     }
   }
 
-  .show-sub {
-    .menu-sub {
-      transition: all 0.5s;
-      width: 100px;
-      opacity: 1;
-    }
+  :deep(.el-menu-item.is-active) {
+    background-color: var(--t-sidebar-active) !important;
+    color: var(--t-sidebar-text-active) !important;
   }
 
-  .is-active {
-    color: black;
+  // 折叠时弹出的子菜单也要跟着深色，否则是一块白底很跳
+  :deep(.el-menu--collapse) .el-sub-menu__title span {
+    display: none;
   }
 </style>

@@ -24,9 +24,9 @@
 <style lang="scss" scoped>
   .el-breadcrumb {
     display: inline-block;
-    vertical-align: top;
-    margin-left: 20px;
-    line-height: 50px;
+    vertical-align: middle;
+    margin-left: 8px;
+    line-height: 1;
     font-size: 14px;
   }
 </style>

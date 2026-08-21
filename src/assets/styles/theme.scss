@@ -1,0 +1,114 @@
+// ============================================================
+// 后台主题令牌（二开）
+//
+// 原来的配色是散在各个组件里的硬编码（侧栏 #15213e、内容区 #f2f3f5…），
+// 想调一下主色要翻好几个文件。这里统一成 CSS 变量，
+// 换肤只改这一处，组件一律引用变量。
+//
+// Element Plus 自己的变量也在这里一并覆盖，
+// 让按钮、表格、分页跟着走同一套色。
+// ============================================================
+
+:root {
+  // ---- 品牌色 ----
+  --t-primary: #3b6ef5;
+  --t-primary-light: #eaf0ff;
+  --t-primary-dark: #2f59c9;
+
+  --t-success: #26a96a;
+  --t-warning: #e6a23c;
+  --t-danger: #e34d59;
+
+  // ---- 侧栏 ----
+  --t-sidebar-bg: #1d2b45;
+  --t-sidebar-text: #b8c3d6;
+  --t-sidebar-text-active: #ffffff;
+  --t-sidebar-hover: #27395a;
+  --t-sidebar-active: var(--t-primary);
+  --t-sidebar-width: 210px;
+  --t-sidebar-width-collapsed: 64px;
+
+  // ---- 顶栏与页签 ----
+  --t-header-h: 52px;
+  --t-tabs-h: 40px;
+  --t-header-bg: #ffffff;
+  --t-border: #e6e8eb;
+
+  // ---- 内容区 ----
+  --t-body-bg: #f3f5f9;
+  --t-card-bg: #ffffff;
+  --t-text: #1f2733;
+  --t-text-weak: #8a94a6;
+
+  --t-radius: 8px;
+  --t-radius-sm: 4px;
+  --t-shadow: 0 1px 2px rgba(31, 39, 51, 0.06);
+
+  // ---- 覆盖 Element Plus，让组件跟着主色走 ----
+  --el-color-primary: var(--t-primary);
+  --el-color-primary-light-3: #6c92f8;
+  --el-color-primary-light-5: #9db4fa;
+  --el-color-primary-light-7: #c5d3fc;
+  --el-color-primary-light-9: var(--t-primary-light);
+  --el-color-success: var(--t-success);
+  --el-color-warning: var(--t-warning);
+  --el-color-danger: var(--t-danger);
+  --el-border-radius-base: var(--t-radius-sm);
+  --el-text-color-primary: var(--t-text);
+  --el-text-color-regular: #4b5666;
+}
+
+// 表格：默认行高偏松，管理后台一屏看不到几行，收紧一点
+.el-table {
+  --el-table-header-bg-color: #f7f9fc;
+  --el-table-header-text-color: var(--t-text);
+  --el-table-border-color: var(--t-border);
+
+  th.el-table__cell {
+    font-weight: 600;
+  }
+}
+
+// 卡片化的页面容器
+.page-card {
+  background: var(--t-card-bg);
+  border-radius: var(--t-radius);
+  box-shadow: var(--t-shadow);
+}
+
+// 27 个页面用了 .app-container 但全局从没定义过它，
+// 白底其实来自布局层。这里显式声明成透明块，避免将来有人以为它自带样式。
+.app-container {
+  width: 100%;
+}
+
+// 页头：搜索条在左、操作按钮在右。
+// 原来两块是上下堆的，白白占掉一行高度。
+.page_head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+
+  .search_bar .el-form-item {
+    margin-bottom: 10px;
+  }
+
+  .button_bar {
+    margin-bottom: 10px;
+  }
+}
+
+// 滚动条：默认的太粗，侧栏里很突兀
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(31, 39, 51, 0.2);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}

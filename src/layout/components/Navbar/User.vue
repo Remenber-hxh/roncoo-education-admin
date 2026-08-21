@@ -28,6 +28,7 @@
   import { ElMessageBox } from 'element-plus'
   import { useRouter } from 'vue-router'
   import { PATH } from '@/utils/constants/system'
+  import { useAppStore } from '@/store/modules/app'
 
   const realName = ref(useUserStore().realName)
   const router = useRouter()
@@ -43,6 +44,8 @@
     }).then(async () => {
       removeToken()
       useUserStore().logout()
+      // 页签也要清掉，否则换个账号登进来还留着上一个人开过的页
+      useAppStore().clearTabs()
       await router.push({ path: PATH.URL_LOGIN })
     })
   }

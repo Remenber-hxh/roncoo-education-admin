@@ -1,6 +1,8 @@
 import { createApp } from 'vue'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
+// 主题令牌要在 index.scss 之前，让后者能覆盖
+import '@/assets/styles/theme.scss'
 import '@/assets/styles/index.scss'
 import App from '@/App.vue'
 import router, { createNewRouter } from '@/router/index.js'
