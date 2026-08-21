@@ -39,7 +39,7 @@
       <el-table-column label="手机号码" :min-width="40" prop="mobile" />
       <el-table-column label="用户信息" :min-width="60">
         <template #default="scope">
-          <img :alt="scope.row.nickname" :src="scope.row.userHead" style="height: 40px; width: auto; border-radius: 50%; vertical-align: middle" />
+          <user-avatar :url="scope.row.userHead" :name="scope.row.nickname" :size="40" />
           &nbsp;{{ scope.row.nickname }}
         </template>
       </el-table-column>
@@ -112,6 +112,7 @@
   import UsersForm from './UsersForm.vue'
   import ProfileForm from './ProfileForm.vue'
   import ImportDialog from './ImportDialog.vue'
+  import UserAvatar from '@/components/Avatar/index.vue'
 
   // 批量导入
   const importRef = ref()

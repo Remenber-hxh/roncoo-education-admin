@@ -2,7 +2,7 @@
   <div class="app-container">
     <el-descriptions title="用户信息" :column="4">
       <el-descriptions-item label="">
-        <img :alt="usersInfo.nickname" :src="usersInfo.userHead" style="height: 60px; width: auto; border-radius: 50%; vertical-align: middle" />
+        <user-avatar :url="usersInfo.userHead" :name="usersInfo.nickname" :size="60" />
         <span style="margin-left: 10px">
           {{ usersInfo.nickname }}
           <br />
@@ -38,6 +38,7 @@
   import { courseApi } from '@/api/course.js'
   import { formatTimeTotal } from '@/utils/base.js'
   import EnumView from '@/components/Enum/View/index.vue'
+  import UserAvatar from '@/components/Avatar/index.vue'
   import { ElMessage } from 'element-plus'
   const route = useRoute()
   const activeName = ref('course')
