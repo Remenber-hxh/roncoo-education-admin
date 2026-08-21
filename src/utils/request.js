@@ -119,6 +119,21 @@ export const postRequest = (url, data = {}) => {
 }
 
 /**
+ * 文件上传（二开）
+ * postRequest 固定发 JSON，上传要用 multipart，故单开一个方法。
+ * 导入这类操作服务端要逐行处理，默认超时不够，这里放宽。
+ */
+export const uploadRequest = (url, formData, timeout = 120000) => {
+  return request({
+    url: url,
+    data: formData,
+    method: 'post',
+    timeout: timeout,
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+}
+
+/**
  * get请求
  */
 export const getRequest = (url) => {

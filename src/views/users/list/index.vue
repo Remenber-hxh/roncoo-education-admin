@@ -25,6 +25,9 @@
           </el-form-item>
         </el-form>
       </div>
+      <div class="button_bar">
+        <el-button v-permission="'user:edit'" type="primary" @click="openImportModal()">批量导入</el-button>
+      </div>
     </div>
     <el-table v-loading="page.loading" :data="page.list">
       <el-table-column label="工号" :min-width="30">
@@ -96,6 +99,7 @@
     <pagination v-model:current-page="page.pageCurrent" v-model:page-size="page.pageSize" :total="page.totalCount" @pagination="handlePage" />
     <users-form ref="formRef" @refresh="handlePage" />
     <profile-form ref="profileRef" @refresh="handlePage" />
+    <import-dialog ref="importRef" @refresh="handlePage" />
   </div>
 </template>
 <script setup>
@@ -107,6 +111,13 @@
   import EnumView from '@/components/Enum/View/index.vue'
   import UsersForm from './UsersForm.vue'
   import ProfileForm from './ProfileForm.vue'
+  import ImportDialog from './ImportDialog.vue'
+
+  // 批量导入
+  const importRef = ref()
+  const openImportModal = () => {
+    importRef.value.onOpen()
+  }
 
   // 添加/修改
   const formRef = ref()

@@ -1,4 +1,4 @@
-import { deleteRequest, getRequest, postRequest, putRequest } from '@/utils/request'
+import { deleteRequest, getRequest, postRequest, putRequest, uploadRequest } from '@/utils/request'
 
 export const usersApi = {
   // 讲师分页
@@ -54,6 +54,11 @@ export const usersApi = {
   // 用户课程分页
   userCoursePage: (params, pageCurrent = 1, pageSize = 20) => {
     return postRequest('/course/admin/user/course/page', { pageCurrent, pageSize, ...params })
+  },
+
+  // 员工批量导入
+  usersImport: (formData) => {
+    return uploadRequest('/user/admin/users/import', formData)
   },
 
   // 员工档案编辑（工号/班组/岗位/入职日期）
