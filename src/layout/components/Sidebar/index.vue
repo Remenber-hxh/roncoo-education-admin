@@ -1,5 +1,5 @@
 <template>
-  <el-aside class="app-sidebar" :width="collapsed ? 'var(--t-sidebar-width-collapsed)' : 'var(--t-sidebar-width)'">
+  <el-aside class="app-sidebar" :class="{ 'is-collapsed': collapsed }">
     <div class="sidebar-brand">
       <!-- svg 图标库里没有 logo，用 Element Plus 的图标当标记 -->
       <el-icon class="brand-icon" :size="22"><reading /></el-icon>
@@ -42,13 +42,28 @@
 </script>
 
 <style lang="scss" scoped>
+  // 宽度用类名切换，且不加 transition。
+  //
+  // 踩过两个坑，都表现为「点了折叠按钮，状态变了但宽度纹丝不动」：
+  //   1. 走 el-aside 的 :width 属性 —— 那只是改 --el-aside-width 变量，
+  //      width 的声明值始终是 var(--el-aside-width) 没变，浏览器不认为
+  //      值发生了变化。
+  //   2. 改成类名切换后，只要 width 上还声明着 transition，浏览器就会把
+  //      由 var() 求值得到的宽度冻在旧值上（实测禁用 transition 的瞬间
+  //      宽度立刻从 64px 跳回 210px）。
+  // 结论：宽度取自 CSS 变量时不要给它加过渡。折叠改为瞬时，
+  // 换来的是行为确定，且变量仍是唯一的数据源。
   .app-sidebar {
+    width: var(--t-sidebar-width);
     background: var(--t-sidebar-bg);
     height: 100vh;
     overflow: hidden;
-    transition: width 0.25s;
     display: flex;
     flex-direction: column;
+
+    &.is-collapsed {
+      width: var(--t-sidebar-width-collapsed);
+    }
   }
 
   .sidebar-brand {

@@ -23,10 +23,11 @@
     item: { type: Object, required: true }
   })
 
-  // menu_type=3 是按钮权限，不该出现在导航里；
-  // is_show=0 的是详情页那类挂了路由但不进菜单的，也要滤掉
-  // （之前「用户记录」「课程编辑」露在侧栏里点了报错，就是这个原因）
-  const visibleChildren = computed(() => (props.item.children || []).filter((c) => c.menuType !== 3 && c.isShow !== 0))
+  // 按钮权限(menu_type=3)和 is_show=0 的详情页路由，
+  // 后端 SysUserCommonBiz.filters() 组装菜单树时已经排除，下发的
+  // AdminSysMenuUserResp 里连 isShow 字段都没有，前端不必再过滤一次。
+  // 这里只做空值兜底：没有子节点时后端返回的是 null 而不是空数组。
+  const visibleChildren = computed(() => props.item.children || [])
 
   const hasChildren = computed(() => visibleChildren.value.length > 0)
 </script>
