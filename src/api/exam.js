@@ -17,6 +17,10 @@ export const examApi = {
   questionView: (id) => {
     return getRequest('/course/admin/exam/question/view?id=' + id)
   },
+  // 按章节统计题量：出题时看哪一章还缺题，组卷前判断够不够抽
+  questionCountByChapter: (courseId) => {
+    return getRequest('/course/admin/exam/question/count/chapter?courseId=' + courseId)
+  },
 
   // ===== 试卷 =====
   paperPage: (data) => {

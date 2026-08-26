@@ -3,6 +3,12 @@
     <div class="page_head">
       <div class="search_bar clearfix">
         <el-form :model="query" inline>
+          <el-form-item label="课程">
+            <course-select v-model="query.courseId" placeholder="全部课程" width="180px" @change="onCourseChange" />
+          </el-form-item>
+          <el-form-item label="章节">
+            <chapter-select v-model="query.chapterId" :course-id="query.courseId" placeholder="全部章节" width="180px" @change="handleQuery" />
+          </el-form-item>
           <el-form-item label="题型">
             <el-select v-model="query.questionType" clearable placeholder="全部" style="width: 120px">
               <el-option :value="1" label="单选" />
@@ -22,7 +28,13 @@
       </div>
     </div>
     <el-table v-loading="page.loading" :data="page.list">
-      <el-table-column label="题干" min-width="300" prop="questionTitle" show-overflow-tooltip />
+      <el-table-column label="题干" min-width="260" prop="questionTitle" show-overflow-tooltip />
+      <el-table-column :width="150" label="所属章节">
+        <template #default="scope">
+          <span v-if="scope.row.chapterId">{{ chapterNameMap[String(scope.row.chapterId)] || '章节' + scope.row.chapterId }}</span>
+          <span v-else class="text-weak">不限</span>
+        </template>
+      </el-table-column>
       <el-table-column :width="80" align="center" label="题型">
         <template #default="scope">
           <el-tag size="small">{{ { 1: '单选', 2: '多选', 3: '判断' }[scope.row.questionType] }}</el-tag>
@@ -55,6 +67,27 @@
   import { examApi } from '@/api/exam'
   import Pagination from '@/components/Pagination/index.vue'
   import QuestionForm from './QuestionForm.vue'
+  import CourseSelect from '@/components/Selector/CourseSelect/index.vue'
+  import ChapterSelect from '@/components/Selector/ChapterSelect/index.vue'
+  import { courseApi } from '@/api/course'
+
+  // 列表只拿得到 chapterId，要显示章节名得自己查一次映射
+  const chapterNameMap = ref({})
+  async function loadChapterNames(courseId) {
+    if (!courseId) {
+      chapterNameMap.value = {}
+      return
+    }
+    const res = await courseApi.courseChapterList({ courseId, pageCurrent: 1, pageSize: 200 })
+    const map = {}
+    ;((res && res.list) || res || []).forEach((c) => (map[String(c.id)] = c.chapterName))
+    chapterNameMap.value = map
+  }
+
+  function onCourseChange(val) {
+    loadChapterNames(val)
+    handleQuery()
+  }
 
   const formRef = ref()
   const openFormModal = (item = null) => {
@@ -66,3 +99,8 @@
     delete: examApi.questionDelete
   })
 </script>
+<style lang="scss" scoped>
+  .text-weak {
+    color: #c0c4cc;
+  }
+</style>

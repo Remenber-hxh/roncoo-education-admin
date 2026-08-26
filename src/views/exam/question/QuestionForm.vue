@@ -31,8 +31,13 @@
           <el-option :value="3" label="难" />
         </el-select>
       </el-form-item>
-      <el-form-item label="所属分类">
-        <el-input v-model="form.categoryId" placeholder="分类ID(选填,组卷按分类抽题)" style="width: 220px" />
+      <el-form-item label="所属课程">
+        <course-select v-model="form.courseId" placeholder="不限课程" @change="onCourseChange" />
+        <span class="form-tip">选了课程才能进一步绑定章节</span>
+      </el-form-item>
+      <el-form-item label="所属章节">
+        <chapter-select v-model="form.chapterId" :course-id="form.courseId" :count-map="chapterCount" />
+        <span class="form-tip">留空表示这道题不限定章节</span>
       </el-form-item>
     </el-form>
     <template #footer>
@@ -45,6 +50,28 @@
   import { reactive, ref } from 'vue'
   import { ElMessage } from 'element-plus'
   import { examApi } from '@/api/exam'
+  import CourseSelect from '@/components/Selector/CourseSelect/index.vue'
+  import ChapterSelect from '@/components/Selector/ChapterSelect/index.vue'
+
+  // 章节题量，让出题人知道哪一章还缺题
+  const chapterCount = ref({})
+  async function loadChapterCount(courseId) {
+    if (!courseId) {
+      chapterCount.value = {}
+      return
+    }
+    const res = await examApi.questionCountByChapter(courseId)
+    const map = {}
+    ;(res || []).forEach((r) => (map[String(r.chapterId)] = r.cnt))
+    chapterCount.value = map
+  }
+
+  // onCourseChange 只在用户手动改课程时触发（下拉的 change 事件），
+  // 回填走的是直接赋值，不会进这里，所以清空章节是安全的
+  function onCourseChange(val) {
+    form.chapterId = null
+    loadChapterCount(val)
+  }
 
   const emit = defineEmits(['refresh'])
   const visible = ref(false)
@@ -52,7 +79,7 @@
   const formRef = ref()
   const KEYS = ['A', 'B', 'C', 'D', 'E', 'F']
 
-  const form = reactive({ id: null, questionType: 1, questionTitle: '', analysis: '', difficulty: 1, categoryId: null })
+  const form = reactive({ id: null, questionType: 1, questionTitle: '', analysis: '', difficulty: 1, categoryId: null, courseId: null, chapterId: null })
   const options = ref([])
   const singleCorrect = ref('A')
 
@@ -97,6 +124,9 @@
       form.analysis = item.analysis
       form.difficulty = item.difficulty || 1
       form.categoryId = item.categoryId
+      form.courseId = item.courseId
+      form.chapterId = item.chapterId
+      loadChapterCount(item.courseId)
       try {
         const opts = JSON.parse(item.optionsJson || '[]')
         const corrects = (item.correctAnswer || '').split(',')
@@ -111,6 +141,9 @@
       form.analysis = ''
       form.difficulty = 1
       form.categoryId = null
+      form.courseId = null
+      form.chapterId = null
+      chapterCount.value = {}
       form.questionType = 1
       options.value = defaultOptions()
       singleCorrect.value = 'A'
@@ -132,6 +165,10 @@
     const data = {
       ...form,
       categoryId: form.categoryId || null,
+      courseId: form.courseId || null,
+      // 显式传 null 而不是省略：后端对 chapter_id 是无条件更新，
+      // 靠这个值把章节改回「不限」
+      chapterId: form.chapterId || null,
       optionsJson: JSON.stringify(filled.map((o) => ({ key: o.key, value: o.value }))),
       correctAnswer
     }
@@ -162,5 +199,10 @@
   .opt-key {
     width: 22px;
     font-weight: 600;
+  }
+  .form-tip {
+    margin-left: 10px;
+    color: #909399;
+    font-size: 12px;
   }
 </style>
