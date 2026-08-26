@@ -90,6 +90,9 @@
                   <el-button v-if="scope.row.statusId == 0" v-permission="'user:edit'" text type="primary">启用</el-button>
                   <el-button v-if="scope.row.statusId == 1" v-permission="'user:edit'" text type="primary">禁用</el-button>
                 </el-dropdown-item>
+                <el-dropdown-item divided>
+                  <el-button v-permission="'user:delete'" text type="danger" @click="handleDeleteUser(scope.row)">删除</el-button>
+                </el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -151,9 +154,25 @@
   }
 
   // 基础功能
-  const { page, handlePage, query, handleQuery, resetQuery, handleStatus } = useTable({
+  const { page, handlePage, query, handleQuery, resetQuery, handleStatus, handleDelete } = useTable({
     page: usersApi.usersPage,
     delete: usersApi.usersDelete,
     status: usersApi.usersEdit
   })
+
+  // 删除是硬删除：只删 users 一行，不动关联数据。
+  // 库里有 14 张表挂着 user_id，其中考试成绩、学习时长、协议签署记录
+  // 都是培训合规凭证，删了人这些会变成查不到归属的孤儿数据。
+  // 所以确认框里点名说清楚删的是谁、会失去什么，并指出「禁用」通常更合适。
+  // 姓名等字段来自库里的用户数据，拼进 HTML 前先转义，避免带尖括号的内容破坏弹窗结构
+  const escapeHtml = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
+
+  const handleDeleteUser = (row) => {
+    const who = [row.nickname, row.empNo ? '工号 ' + row.empNo : '', row.mobile].filter(Boolean).map(escapeHtml).join(' / ')
+    const tip =
+      `<div style="line-height:1.7">确认删除 <b>${who}</b> ？<br/>` +
+      '<span style="color:#e34d59">该员工的学习记录、考试成绩、协议签署记录会失去归属，且无法恢复。</span><br/>' +
+      '若只是员工离职、不希望其再登录，用「禁用」即可，记录会完整保留。</div>'
+    handleDelete(row, tip, { dangerouslyUseHTMLString: true, confirmButtonClass: 'el-button--danger' })
+  }
 </script>

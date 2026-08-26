@@ -59,12 +59,14 @@ export default function useTable(apis, paras = {}) {
   }
 
   //删除功能
-  const handleDelete = (data, tip = '') => {
+  // opts 透传给 ElMessageBox，比如需要多行提示时传 { dangerouslyUseHTMLString: true }
+  const handleDelete = (data, tip = '', opts = {}) => {
     if (apis.delete) {
       ElMessageBox.confirm(tip || '确认删除当前数据?', '提示', {
         type: 'warning',
         cancelButtonText: '取消',
-        confirmButtonText: '确认'
+        confirmButtonText: '确认',
+        ...opts
       }).then(async () => {
         page.loading = true
         try {
