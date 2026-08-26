@@ -1,9 +1,12 @@
 <template>
   <el-aside class="app-sidebar" :class="{ 'is-collapsed': collapsed }">
     <div class="sidebar-brand">
-      <!-- svg 图标库里没有 logo，用 Element Plus 的图标当标记 -->
-      <el-icon class="brand-icon" :size="22"><reading /></el-icon>
-      <span v-show="!collapsed" class="brand-text">内部培训平台</span>
+      <!-- 站点名称和 Logo 都取自「参数配置」，不能写死。
+           改版时我把这里写成了固定的「内部培训平台」，
+           结果后台把网站名称改成别的，侧栏还是老样子。 -->
+      <img v-if="websiteLogo" class="brand-logo" :src="websiteLogo" :alt="websiteName" />
+      <el-icon v-else class="brand-icon" :size="22"><reading /></el-icon>
+      <span v-show="!collapsed" class="brand-text">{{ websiteName }}</span>
     </div>
     <el-scrollbar class="sidebar-scroll">
       <el-menu
@@ -27,6 +30,7 @@
   import { useRoute } from 'vue-router'
   import { useUserStore } from '@/store/modules/user'
   import { useAppStore } from '@/store/modules/app'
+  import { useWebsiteStore } from '@/store/modules/website.js'
   import SidebarItem from './SidebarItem.vue'
   import { Reading } from '@element-plus/icons-vue'
 
@@ -34,6 +38,10 @@
   // 原来是鼠标悬停展开第二列，改成标准的可折叠嵌套菜单。
   const menuList = computed(() => useUserStore().getMenuList)
   const collapsed = computed(() => useAppStore().sidebarCollapsed)
+
+  // 站点信息由 layout/index.vue 在挂载时调 useWebsiteStore().init() 拉取
+  const websiteName = computed(() => useWebsiteStore().getInfo?.websiteName || '培训平台')
+  const websiteLogo = computed(() => useWebsiteStore().getInfo?.websiteLogo || '')
 
   const route = useRoute()
   // 用路径而不是路由名做高亮：详情页这类没挂菜单的路由，
@@ -79,6 +87,14 @@
     .brand-icon {
       width: 24px;
       height: 24px;
+      flex-shrink: 0;
+    }
+
+    .brand-logo {
+      height: 26px;
+      width: auto;
+      max-width: 32px;
+      object-fit: contain;
       flex-shrink: 0;
     }
 
