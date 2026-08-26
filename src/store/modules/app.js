@@ -3,6 +3,9 @@ import { defineStore } from 'pinia'
 const COLLAPSE_KEY = 'admin_sidebar_collapsed'
 const TABS_KEY = 'admin_visited_tabs'
 
+/** 页签数量上限，超出后挤掉最早打开的 */
+const MAX_TABS = 3
+
 /**
  * 界面状态（二开）：侧栏折叠 + 多页签。
  * 两者都落 sessionStorage——刷新页面后还是原样，
@@ -13,7 +16,8 @@ export const useAppStore = defineStore({
   state: () => ({
     sidebarCollapsed: sessionStorage.getItem(COLLAPSE_KEY) === '1',
     // 每项：{ path, title, closable }
-    visitedTabs: JSON.parse(sessionStorage.getItem(TABS_KEY) || '[]')
+    // 截断一次：sessionStorage 里可能存着改上限之前留下的更多页签
+    visitedTabs: JSON.parse(sessionStorage.getItem(TABS_KEY) || '[]').slice(-MAX_TABS)
   }),
   actions: {
     toggleSidebar() {
@@ -33,8 +37,21 @@ export const useAppStore = defineStore({
       if (exist) {
         // 标题可能随数据变化（比如详情页带了名字），每次进来刷新一下
         exist.title = tab.title || exist.title
-      } else {
-        this.visitedTabs.push({ path: tab.path, title: tab.title || tab.path, closable: tab.closable !== false })
+        this.persistTabs()
+        return
+      }
+
+      this.visitedTabs.push({ path: tab.path, title: tab.title || tab.path, closable: tab.closable !== false })
+
+      // 超过上限就挤掉最早打开的那个。
+      // 新加的这个是当前页，不能被挤掉，所以从头找第一个可关闭且不是它自己的。
+      while (this.visitedTabs.length > MAX_TABS) {
+        const idx = this.visitedTabs.findIndex((t) => t.closable !== false && t.path !== tab.path)
+        if (idx < 0) {
+          // 全是不可关闭的，挤不动，只能留着
+          break
+        }
+        this.visitedTabs.splice(idx, 1)
       }
       this.persistTabs()
     },
