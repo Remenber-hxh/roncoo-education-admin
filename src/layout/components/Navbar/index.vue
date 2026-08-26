@@ -12,7 +12,8 @@
     </div>
 
     <div class="navbar-right">
-      <a class="icon-btn" href="/" target="_blank" title="打开员工端">
+      <!-- href 不能写 "/"，那指向后台自己。门户是独立应用，地址见 utils/portal.js -->
+      <a class="icon-btn" :href="portalUrl" target="_blank" rel="noopener" title="打开员工端">
         <el-icon :size="17"><monitor /></el-icon>
       </a>
       <span class="icon-btn" :title="isFullscreen ? '退出全屏' : '全屏'" @click="toggleFullscreen">
@@ -32,9 +33,13 @@
   import Breadcrumb from './Breadcrumb.vue'
   import User from './User.vue'
   import { useAppStore } from '@/store/modules/app'
+  import { getPortalUrl } from '@/utils/portal'
 
   const appStore = useAppStore()
   const collapsed = computed(() => appStore.sidebarCollapsed)
+
+  // 站点信息是异步拉的，用 computed 让域名到位后链接自动更新
+  const portalUrl = computed(() => getPortalUrl())
 
   const isFullscreen = ref(false)
   function toggleFullscreen() {

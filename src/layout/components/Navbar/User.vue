@@ -1,6 +1,7 @@
 <template>
   <div class="info">
-    <a href="/" target="_blank" class="info-home">
+    <!-- 原来写的是 href="/"，指向后台自己，点了等于原地刷新 -->
+    <a :href="portalUrl" target="_blank" rel="noopener" class="info-home">
       <el-icon><House /></el-icon>&nbsp;首页
     </a>
     <el-dropdown class="user-info">
@@ -23,7 +24,8 @@
 <script setup>
   import { ArrowDown } from '@element-plus/icons-vue'
   import { useUserStore } from '@/store/modules/user'
-  import { ref } from 'vue'
+  import { computed, ref } from 'vue'
+  import { getPortalUrl } from '@/utils/portal'
   import { removeToken } from '@/utils/cookie'
   import { ElMessageBox } from 'element-plus'
   import { useRouter } from 'vue-router'
@@ -31,6 +33,7 @@
   import { useAppStore } from '@/store/modules/app'
 
   const realName = ref(useUserStore().realName)
+  const portalUrl = computed(() => getPortalUrl())
   const router = useRouter()
 
   /**
