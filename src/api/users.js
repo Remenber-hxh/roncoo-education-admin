@@ -56,6 +56,11 @@ export const usersApi = {
     return postRequest('/course/admin/user/course/page', { pageCurrent, pageSize, ...params })
   },
 
+  // 重置登录密码（重置为手机号后6位，返回新密码）
+  usersResetPsw: (data) => {
+    return putRequest('/user/admin/users/psw/reset?id=' + data.id)
+  },
+
   // 员工批量导入
   usersImport: (formData) => {
     return uploadRequest('/user/admin/users/import', formData)

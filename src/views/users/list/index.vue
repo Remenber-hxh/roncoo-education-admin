@@ -30,43 +30,46 @@
       </div>
     </div>
     <el-table v-loading="page.loading" :data="page.list">
-      <el-table-column label="工号" :min-width="30">
+      <!--
+        原来 11 列平铺，且 min-width 写的是 30/40/60 这种值——
+        Element Plus 把它当像素用，结果「状态」只有 36px、「工号」54px，
+        挤成一团。这里把关联信息并列显示，只留真正需要横向对比的字段。
+      -->
+      <el-table-column label="员工" min-width="200">
         <template #default="scope">
-          <span v-if="scope.row.empNo">{{ scope.row.empNo }}</span>
-          <el-tag v-else size="small" type="warning">未填</el-tag>
+          <div class="cell-user">
+            <user-avatar :url="scope.row.userHead" :name="scope.row.nickname" :size="36" />
+            <div class="cell-user-text">
+              <div class="name">
+                {{ scope.row.nickname || '未命名' }}
+                <el-tag v-if="scope.row.statusId === 0" size="small" type="danger">已禁用</el-tag>
+              </div>
+              <div class="sub">
+                工号 {{ scope.row.empNo || '—' }}
+                <span class="dot">·</span>
+                {{ scope.row.mobile }}
+              </div>
+            </div>
+          </div>
         </template>
       </el-table-column>
-      <el-table-column label="手机号码" :min-width="40" prop="mobile" />
-      <el-table-column label="用户信息" :min-width="60">
+      <el-table-column label="归属" min-width="170">
         <template #default="scope">
-          <user-avatar :url="scope.row.userHead" :name="scope.row.nickname" :size="40" />
-          &nbsp;{{ scope.row.nickname }}
+          <div>
+            <el-tag v-if="scope.row.teamName" size="small">{{ scope.row.teamName }}</el-tag>
+            <el-tag v-else size="small" type="warning">未分班组</el-tag>
+          </div>
+          <div class="mt4">
+            <el-tag v-if="scope.row.projectGroupName" size="small" type="info">{{ scope.row.projectGroupName }}</el-tag>
+            <el-tag v-else size="small" type="warning">未分项目组</el-tag>
+          </div>
         </template>
       </el-table-column>
-      <el-table-column label="班组" :min-width="35">
-        <template #default="scope">
-          <span v-if="scope.row.teamName">{{ scope.row.teamName }}</span>
-          <el-tag v-else size="small" type="warning">未分组</el-tag>
-        </template>
+      <el-table-column label="岗位职务" min-width="140" prop="position" show-overflow-tooltip>
+        <template #default="scope">{{ scope.row.position || '—' }}</template>
       </el-table-column>
-      <el-table-column label="项目组" :min-width="45">
-        <template #default="scope">
-          <span v-if="scope.row.projectGroupName">{{ scope.row.projectGroupName }}</span>
-          <el-tag v-else size="small" type="warning">未分组</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="岗位职务" :min-width="45" prop="position" show-overflow-tooltip />
-      <el-table-column label="入职日期" :min-width="40" prop="hireDate" />
-      <el-table-column :min-width="40" label="注册来源" prop="remark">
-        <template #default="scope">
-          <enum-view :enum-name="'RegisterSourceEnum'" :enum-value="scope.row.registerSource" />
-        </template>
-      </el-table-column>
-      <el-table-column :min-width="50" label="注册时间" prop="gmtCreate" />
-      <el-table-column :min-width="20" label="状态">
-        <template #default="scope">
-          <enum-view :enum-name="'StatusIdEnum'" :enum-value="scope.row.statusId" />
-        </template>
+      <el-table-column label="入职日期" width="120" align="center">
+        <template #default="scope">{{ scope.row.hireDate || '—' }}</template>
       </el-table-column>
       <el-table-column :width="280" fixed="right" label="操作" prop="address">
         <template #default="scope">
@@ -90,6 +93,9 @@
                   <el-button v-if="scope.row.statusId == 0" v-permission="'user:edit'" text type="primary">启用</el-button>
                   <el-button v-if="scope.row.statusId == 1" v-permission="'user:edit'" text type="primary">禁用</el-button>
                 </el-dropdown-item>
+                <el-dropdown-item>
+                  <el-button v-permission="'user:edit'" text type="primary" @click="handleResetPsw(scope.row)">重置密码</el-button>
+                </el-dropdown-item>
                 <el-dropdown-item divided>
                   <el-button v-permission="'user:delete'" text type="danger" @click="handleDeleteUser(scope.row)">删除</el-button>
                 </el-dropdown-item>
@@ -110,8 +116,8 @@
   import { onMounted, ref } from 'vue'
   import { usersApi } from '@/api/users'
   import { useRouter } from 'vue-router'
+  import { ElMessageBox } from 'element-plus'
   import Pagination from '@/components/Pagination/index.vue'
-  import EnumView from '@/components/Enum/View/index.vue'
   import UsersForm from './UsersForm.vue'
   import ProfileForm from './ProfileForm.vue'
   import ImportDialog from './ImportDialog.vue'
@@ -167,6 +173,25 @@
   // 姓名等字段来自库里的用户数据，拼进 HTML 前先转义，避免带尖括号的内容破坏弹窗结构
   const escapeHtml = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
 
+  // 密码是加盐哈希存的，管理员看不到也找不回，只能重置。
+  // 重置成手机号后 6 位，与批量导入建号时的规则一致；
+  // 新密码要显示出来，管理员得能转告员工。
+  const handleResetPsw = (row) => {
+    const who = escapeHtml([row.nickname, row.empNo ? '工号 ' + row.empNo : ''].filter(Boolean).join(' / '))
+    ElMessageBox.confirm(`确认重置 <b>${who}</b> 的登录密码？<br/>将重置为其手机号后 6 位。`, '重置密码', {
+      type: 'warning',
+      dangerouslyUseHTMLString: true,
+      cancelButtonText: '取消',
+      confirmButtonText: '确认重置'
+    }).then(async () => {
+      const newPsw = await usersApi.usersResetPsw({ id: row.id })
+      ElMessageBox.alert(`新密码：<b style="font-size:18px">${escapeHtml(newPsw)}</b><br/>请转告员工，并提醒其登录后自行修改。`, '重置成功', {
+        dangerouslyUseHTMLString: true,
+        confirmButtonText: '知道了'
+      })
+    })
+  }
+
   const handleDeleteUser = (row) => {
     const who = [row.nickname, row.empNo ? '工号 ' + row.empNo : '', row.mobile].filter(Boolean).map(escapeHtml).join(' / ')
     const tip =
@@ -176,3 +201,35 @@
     handleDelete(row, tip, { dangerouslyUseHTMLString: true, confirmButtonClass: 'el-button--danger' })
   }
 </script>
+
+<style lang="scss" scoped>
+  // 头像 + 姓名 + 工号/手机号 并成一列，比原来平铺三列省一半横向空间
+  .cell-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .cell-user-text {
+    min-width: 0;
+
+    .name {
+      font-weight: 500;
+      line-height: 20px;
+    }
+
+    .sub {
+      color: #909399;
+      font-size: 12px;
+      line-height: 18px;
+    }
+
+    .dot {
+      margin: 0 4px;
+    }
+  }
+
+  .mt4 {
+    margin-top: 4px;
+  }
+</style>
