@@ -1,4 +1,4 @@
-import { deleteRequest, getRequest, postRequest, putRequest } from '@/utils/request'
+import { deleteRequest, getRequest, postRequest, putRequest, uploadRequest } from '@/utils/request'
 
 export const examApi = {
   // ===== 题库 =====
@@ -20,6 +20,9 @@ export const examApi = {
   // 按章节统计题量：出题时看哪一章还缺题，组卷前判断够不够抽
   questionCountByChapter: (courseId) => {
     return getRequest('/course/admin/exam/question/count/chapter?courseId=' + courseId)
+  },
+  questionImport: (formData) => {
+    return uploadRequest('/course/admin/exam/question/import', formData)
   },
 
   // ===== 试卷 =====

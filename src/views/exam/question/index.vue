@@ -23,6 +23,8 @@
             <el-button type="primary" @click="handleQuery">查询</el-button>
             <el-button @click="resetQuery()">重置</el-button>
             <el-button type="primary" @click="openFormModal()">添加题目</el-button>
+            <el-button @click="openImport()">批量导入</el-button>
+            <el-button :loading="exporting" @click="handleExport()">导出</el-button>
           </el-form-item>
         </el-form>
       </div>
@@ -59,6 +61,7 @@
     </el-table>
     <pagination v-model:current-page="page.pageCurrent" v-model:page-size="page.pageSize" :total="page.totalCount" @pagination="handlePage" />
     <question-form ref="formRef" @refresh="handlePage" />
+    <import-dialog ref="importRef" @refresh="handlePage" />
   </div>
 </template>
 <script setup>
@@ -67,9 +70,12 @@
   import { examApi } from '@/api/exam'
   import Pagination from '@/components/Pagination/index.vue'
   import QuestionForm from './QuestionForm.vue'
+  import ImportDialog from './ImportDialog.vue'
   import CourseSelect from '@/components/Selector/CourseSelect/index.vue'
   import ChapterSelect from '@/components/Selector/ChapterSelect/index.vue'
   import { courseApi } from '@/api/course'
+  import { downloadFile } from '@/utils/download'
+  import { ElMessage } from 'element-plus'
 
   // 列表只拿得到 chapterId，要显示章节名得自己查一次映射
   const chapterNameMap = ref({})
@@ -98,6 +104,34 @@
     page: examApi.questionPage,
     delete: examApi.questionDelete
   })
+
+  // 导入导出共用当前的筛选条件：导出什么，改完就导回什么，
+  // 不会一按导出就把整个题库拉下来
+  const currentFilter = () => ({
+    courseId: query.courseId,
+    chapterId: query.chapterId,
+    questionType: query.questionType,
+    keyword: query.keyword
+  })
+
+  const importRef = ref()
+  const openImport = () => {
+    importRef.value.onOpen(currentFilter())
+  }
+
+  const exporting = ref(false)
+  const handleExport = async () => {
+    if (page.totalCount === 0) {
+      ElMessage.warning('当前筛选条件下没有题目')
+      return
+    }
+    exporting.value = true
+    try {
+      await downloadFile('/gateway/course/admin/exam/question/export', '题库导出.xlsx', currentFilter())
+    } finally {
+      exporting.value = false
+    }
+  }
 </script>
 <style lang="scss" scoped>
   .text-weak {
