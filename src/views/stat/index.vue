@@ -86,8 +86,24 @@
       <template #header>
         <span>逾期未完成名单</span>
         <span v-if="data.overdueList.length" class="card-tip">共 {{ data.overdueCount }} 人次，按逾期天数排序</span>
+        <span v-if="data.overdueList.length" class="header-actions">
+          <el-button size="small" :disabled="!selected.length" @click="openRemind(false)">
+            催办选中{{ selected.length ? `（${selected.length}）` : '' }}
+          </el-button>
+          <el-button size="small" type="danger" plain @click="openRemind(true)">
+            催办全部（{{ data.overdueCount }}）
+          </el-button>
+        </span>
       </template>
-      <el-table v-if="data.overdueList.length" :data="data.overdueList" size="small" max-height="420">
+      <el-table
+        v-if="data.overdueList.length"
+        ref="overdueTableRef"
+        :data="data.overdueList"
+        size="small"
+        max-height="420"
+        @selection-change="(rows) => (selected = rows)"
+      >
+        <el-table-column type="selection" width="42" />
         <el-table-column label="工号" prop="empNo" width="80" />
         <el-table-column label="姓名" prop="nickname" width="100" />
         <el-table-column label="班组" width="110">
@@ -111,12 +127,30 @@
       </el-table>
       <el-empty v-else description="没有逾期未完成的任务" :image-size="80" />
     </el-card>
+
+    <el-dialog v-model="remindVisible" title="发送催办" width="460px">
+      <p class="remind-target">{{ remindTip }}</p>
+      <el-input
+        v-model="remindRemark"
+        type="textarea"
+        :rows="3"
+        maxlength="200"
+        show-word-limit
+        placeholder="附言（选填），会附在消息正文后面，例如：本周五前务必完成"
+      />
+      <p class="remind-note">同一员工同一课程 24 小时内不会重复发送。</p>
+      <template #footer>
+        <el-button @click="remindVisible = false">取消</el-button>
+        <el-button type="primary" :loading="remindLoading" @click="doRemind">确定发送</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
   import * as echarts from 'echarts'
   import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+  import { ElMessage } from 'element-plus'
   import { learnStatApi } from '@/api/stat'
 
   const COLOR = {
@@ -183,6 +217,45 @@
     if (rate >= 90) return 'good'
     if (rate >= 60) return 'warn'
     return 'bad'
+  }
+
+  // ---- 催办 ----
+  const overdueTableRef = ref()
+  const selected = ref([])
+  const remindVisible = ref(false)
+  const remindLoading = ref(false)
+  const remindRemark = ref('')
+  const remindAll = ref(false)
+
+  const remindTip = computed(() =>
+    remindAll.value
+      ? `将对当前全部 ${data.value.overdueCount} 人次逾期未完成的员工发送催办。`
+      : `将对选中的 ${selected.value.length} 人次发送催办。`
+  )
+
+  const openRemind = (all) => {
+    remindAll.value = all
+    remindRemark.value = ''
+    remindVisible.value = true
+  }
+
+  const doRemind = async () => {
+    remindLoading.value = true
+    try {
+      // 催办全部时只传 all，让后端自己重算：名单最多只返回 100 条，
+      // 拿页面上的行去催会漏掉第 100 条之后的人
+      const payload = remindAll.value
+        ? { all: true }
+        : { items: selected.value.map((r) => ({ userId: r.userId, courseId: r.courseId })) }
+      payload.remark = remindRemark.value
+      const res = await learnStatApi.remind(payload)
+      ElMessage.success(res.message || '已发送')
+      remindVisible.value = false
+      overdueTableRef.value?.clearSelection()
+      // 催办不改变逾期状态，无需重新拉看板数据
+    } finally {
+      remindLoading.value = false
+    }
   }
 
   const load = async () => {
@@ -401,6 +474,19 @@
   }
   .card-tip {
     margin-left: 10px;
+    font-size: 12px;
+    color: #909399;
+  }
+  // 按钮靠右，与卡片标题同一行
+  .header-actions {
+    float: right;
+  }
+  .remind-target {
+    margin: 0 0 12px;
+    font-size: 14px;
+  }
+  .remind-note {
+    margin: 10px 0 0;
     font-size: 12px;
     color: #909399;
   }
