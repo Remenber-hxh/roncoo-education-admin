@@ -291,15 +291,23 @@
     const c = use('trend', trendRef.value)
     if (!c) return
     const t = data.value.trend
+    // 按当期最大值选单位。固定用「分钟」的话，日学习时长不足一分钟时
+    // 每个刻度都被 toFixed(0) 抹成 0，整条 y 轴显示一排零，
+    // 看着像功能坏了，其实是有人在学的
+    const maxSec = Math.max(0, ...t.map((x) => Number(x.seconds) || 0))
+    const unit = maxSec >= 3600 ? { name: '小时', div: 3600 } : maxSec >= 60 ? { name: '分钟', div: 60 } : { name: '秒', div: 1 }
+    const fmt = (sec) => {
+      const v = Number(sec) / unit.div
+      return unit.div === 1 ? String(Math.round(v)) : v.toFixed(1)
+    }
     c.setOption(
       {
         tooltip: {
           trigger: 'axis',
           formatter: (params) => {
             const p = params[0]
-            const minutes = (Number(p.value) / 60).toFixed(1)
             const users = t[p.dataIndex]?.userCount || 0
-            return `${p.name}<br/>学习时长 ${minutes} 分钟<br/>学习人数 ${users} 人`
+            return `${p.name}<br/>学习时长 ${fmt(p.value)} ${unit.name}<br/>学习人数 ${users} 人`
           }
         },
         grid: { left: 50, right: 20, top: 30, bottom: 50 },
@@ -311,8 +319,8 @@
         },
         yAxis: {
           type: 'value',
-          name: '分钟',
-          axisLabel: { formatter: (v) => (v / 60).toFixed(0) }
+          name: unit.name,
+          axisLabel: { formatter: (v) => fmt(v) }
         },
         series: [
           {
