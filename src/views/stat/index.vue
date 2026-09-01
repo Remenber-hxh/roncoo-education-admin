@@ -86,7 +86,7 @@
       <template #header>
         <span>逾期未完成名单</span>
         <span v-if="data.overdueList.length" class="card-tip">共 {{ data.overdueCount }} 人次，按逾期天数排序</span>
-        <span v-if="data.overdueList.length" class="header-actions">
+        <span v-if="data.overdueList.length && hasPermission('stat:remind')" class="header-actions">
           <el-button size="small" :disabled="!selected.length" @click="openRemind(false)">
             催办选中{{ selected.length ? `（${selected.length}）` : '' }}
           </el-button>
@@ -152,6 +152,7 @@
   import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
   import { ElMessage } from 'element-plus'
   import { learnStatApi } from '@/api/stat'
+  import { hasPermission } from '@/utils/permission.js'
 
   const COLOR = {
     finished: '#67c23a',
